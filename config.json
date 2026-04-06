@@ -1,0 +1,27 @@
+{
+    "bridge": {
+        "name": "Homebridge",
+        "username": "CD:22:3D:E3:CE:30",
+        "pin": "031-45-156"
+    },
+    "name": "BrollerTemperature",
+    "platform": "BrollerHomebridgeTemperature",
+    "accessories": [
+        {
+            "accessory": "BrollerTemperature",
+	    "ID": "1E755DDB9D7F",
+            "name": "Freezer",
+            "url": "http://192.168.4.187",
+            "field_name": "temperature",
+            "units": "F"
+        },
+        {
+            "accessory": "BrollerTemperature",
+	    "ID": "E1755DDB9D7F",
+            "name": "Soil",
+            "url": "http://192.168.4.176/soil",
+            "field_name": "temperature",
+            "units": "F"
+        }
+    ]
+}
