@@ -1,6 +1,6 @@
 import type { API, Characteristic, DynamicPlatformPlugin, Logging, PlatformAccessory, PlatformConfig, Service } from 'homebridge';
 
-import { BrollerPlatformAccessory } from './platformAccessory.js';
+import { BrollerBackyardAccessory } from './platformAccessory.js';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 
 /**
@@ -8,7 +8,7 @@ import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
  * This class is the main constructor for your plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
-export class BrollerHomebridgePlatform implements DynamicPlatformPlugin {
+export class BrollerBackyardPlatform implements DynamicPlatformPlugin {
     public readonly Service: typeof Service;
     public readonly Characteristic: typeof Characteristic;
 
@@ -95,7 +95,7 @@ export class BrollerHomebridgePlatform implements DynamicPlatformPlugin {
 
 		// create the accessory handler for the restored accessory
 		// this is imported from `platformAccessory.ts`
-		new BrollerPlatformAccessory(this, existingAccessory);
+		new BrollerBackyardAccessory(this, existingAccessory);
 
 		// it is possible to remove platform accessories at any
 		// time using `api.unregisterPlatformAccessories`, e.g.:
@@ -121,7 +121,7 @@ export class BrollerHomebridgePlatform implements DynamicPlatformPlugin {
 
 		// create the accessory handler for the newly create accessory
 		// this is imported from `platformAccessory.ts`
-		new BrollerPlatformAccessory(this, accessory);
+		new BrollerBackyardAccessory(this, accessory);
 
 		// link the accessory to your platform
 		this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

@@ -1,11 +1,11 @@
 import type { API } from 'homebridge';
 
-import { BrollerHomebridgePlatform } from './platform.js';
+import { BrollerBackyardPlatform } from './platform.js';
 import { PLATFORM_NAME } from './settings.js';
 
 /**
  * This method registers the platform with Homebridge
  */
 export default (api: API) => {
-  api.registerPlatform(PLATFORM_NAME, BrollerHomebridgePlatform);
+  api.registerPlatform(PLATFORM_NAME, BrollerBackyardPlatform);
 };

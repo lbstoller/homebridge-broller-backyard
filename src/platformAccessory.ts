@@ -1,12 +1,13 @@
 import type { CharacteristicValue, PlatformAccessory, Service } from 'homebridge';
 
-import type { BrollerHomebridgePlatform } from './platform.js';
+import type { BrollerBackyardPlatform } from './platform.js';
 
 /*
  * Layer an interface over the json object.
  */
-interface Temperature {
-  readonly temperature: number;
+interface lightInfo {
+    readonly mode: string;
+    readonly onoff: string;
 }
 
 /**
@@ -14,22 +15,25 @@ interface Temperature {
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class BrollerPlatformAccessory {
+export class BrollerBackyardAccessory {
     private service: Service;
+    private autoService: Service;
 
     /* Characteristic States */
     private accessoryState = {
-	temperature: 45,
-	statusActive: false,
+	on: false,
+	mode: "",
+	active: false,
+	auto: true,
     };
-    private readonly url: string;
+    private readonly baseurl: string;
 
     constructor(
-	private readonly platform: BrollerHomebridgePlatform,
+	private readonly platform: BrollerBackyardPlatform,
 	private readonly accessory: PlatformAccessory) {
 	
-	this.platform.log.debug('Setting up Broller temperature sensor');
-	this.url = accessory.context.device.url;
+	this.platform.log.debug('Setting up Broller backyard accessory');
+	this.baseurl = accessory.context.device.url;
 	
 	// set accessory information
 	this.accessory.getService(this.platform.Service.AccessoryInformation)!
@@ -39,10 +43,10 @@ export class BrollerPlatformAccessory {
 			       'Default-Model')
 	    .setCharacteristic(this.platform.Characteristic.SerialNumber,
 			       'Default-Serial');
-	// get the sensor service if it exists, otherwise create a new service
+	// get the service if it exists, otherwise create a new service
 	// you can create multiple services for each accessory
-	this.service = this.accessory.getService(this.platform.Service.TemperatureSensor) ||
-	    this.accessory.addService(this.platform.Service.TemperatureSensor);
+	this.service = this.accessory.getService(this.platform.Service.Switch) ||
+	    this.accessory.addService(this.platform.Service.Switch);
 
 	// set the service name, this is what is displayed as the
 	// default name on the Home app in this example we are using the
@@ -51,12 +55,24 @@ export class BrollerPlatformAccessory {
 	this.service.setCharacteristic(this.platform.Characteristic.Name,
 				       accessory.context.device.name);
 
-	// register handler for the temperature Characteristic
-	this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
-	    .onGet(this.getCurrentTemperature.bind(this));
-	// and a handler for the statusActive Characteristic
-	this.service.getCharacteristic(this.platform.Characteristic.StatusActive)
-	    .onGet(this.getStatusActive.bind(this));
+	// register handler for on/off
+	this.service.getCharacteristic(this.platform.Characteristic.On)
+            .onGet(this.getOnOff.bind(this))
+            .onSet(this.setOnOff.bind(this));
+
+	// Add another switch for "auto" mode
+	let autoName = accessory.context.device.name + " Auto";
+	let autoID   = accessory.context.device.ID + "Auto";
+	this.autoService = this.accessory.getService(autoName)
+	    || this.accessory.addService(this.platform.Service.Switch,
+					 autoName, autoID);
+	
+	this.autoService.setCharacteristic(this.platform.Characteristic.Name, "Auto");
+	this.autoService.setCharacteristic(this.platform.Characteristic.ConfiguredName, "Auto");
+
+	this.autoService.getCharacteristic(this.platform.Characteristic.On)
+            .onGet(this.getAutoMode.bind(this))
+            .onSet(this.setAutoMode.bind(this));
 
 	/*
 	 * Updating characteristics values asynchronously.
@@ -65,22 +81,18 @@ export class BrollerPlatformAccessory {
 	 * asynchronously instead of using the `on('get')` handlers.
 	 */
 	setInterval(() => {
-	    this.platform.log.debug('Triggering temperature interval:');
+	    this.platform.log.debug('Triggering backyard accessory interval:');
 
-	    this.updateTemperature()
+	    this.updateOnOff()
 		.then(() => {
-		    this.platform.log.debug('update temperature done');
+		    this.platform.log.debug('update OnOff done');
 		    // push the new value and status to HomeKit
 		    this.service.updateCharacteristic(
-			this.platform.Characteristic.CurrentTemperature,
-			this.accessoryState.temperature);
-		    this.service.updateCharacteristic(
-			this.platform.Characteristic.StatusActive,
-			this.accessoryState.statusActive);
+			this.platform.Characteristic.On, this.accessoryState.on);
 		});
 	}, 10000);
 	
-	this.platform.log.debug('Finished setting up Broller temperature sensor');
+	this.platform.log.debug('Finished setting up Broller backyard accessory');
     }
 
     /*
@@ -95,37 +107,105 @@ export class BrollerPlatformAccessory {
      * In this case, you may decide not to implement `onGet` handlers, which may speed up
      * the responsiveness of your device in the Home app.
      */
-    getCurrentTemperature() {
-	this.platform.log.debug('Triggering getCurrentTemperature:');
-	return this.accessoryState.temperature;
-    }
-    getStatusActive() {
-	this.platform.log.debug('Triggering getStatusActive:');
-	return this.accessoryState.statusActive;
+    getOnOff() {
+	this.platform.log.debug('Triggering getOnOff:');
+	return this.accessoryState.on;
     }
 
     /*
-     * Handle the interval timer; async fetch temperature from the arduino which
+     * Handle SET to turn lights on/off.
+     */
+    async setOnOff(value: CharacteristicValue) {
+	let on = value as boolean;
+	let url = this.baseurl;
+	this.platform.log('setOnOff ->', value);
+	
+	if (on) {
+	    url = url + "/on";
+	}
+	else {
+	    url = url + "/off";
+	}
+	await fetch(url)
+	    .then((response) => {
+		this.platform.log('setOnOff returns : ' + response.ok);
+		if (response.ok) {
+		    if (on) {
+			this.accessoryState.on = true;
+		    }
+		    else {
+			this.accessoryState.on = false;
+		    }
+		    // push the new value to HomeKit
+		    this.service.updateCharacteristic(
+			this.platform.Characteristic.On, this.accessoryState.on);
+		}
+	    })
+	    .catch((error) => {
+		this.platform.log('setOnOff Error : ' + error.message);
+	    });
+    }
+
+    /*
+     * Handle the interval timer; async fetch mode from the arduino which
      * responds to a http GET with a json string. 
      */
-    async updateTemperature() {
+    async updateOnOff() {
 	let updated = false;
 	await this.callServer()
-	    .then((temperature: Temperature) => {
-		this.platform.log.debug('CallServerResponse: Temperature: '
-		    + temperature.temperature);
-		// Comes back in F, but Homebridge wants C.
-		this.accessoryState.temperature = (temperature.temperature - 32) / 1.8;
+	    .then((info: lightInfo) => {
+		this.platform.log.debug('CallServerResponse: lightInfo: '
+		    + info.mode + "," + info.onoff);
+		if (info.onoff == "on") {
+		    this.accessoryState.on = true;
+		}
+		else {
+		    this.accessoryState.on = false;
+		}
+		this.accessoryState.mode = info.mode;
+		this.accessoryState.auto = (info.mode == "auto" ? true : false);
 		updated = true;
 	    })
 	    .catch((error) => {
-		this.platform.log('updateTemperature Error : ' + error.message);
+		this.platform.log('updateOnOff Error : ' + error.message);
 	    });
-	this.accessoryState.statusActive = updated;
+	this.accessoryState.active = updated;
 	return updated;
     }
-    async callServer(): Promise<Temperature> {
-	const response = await fetch(this.url);
-	return response.json() as Promise<Temperature>;
+    async callServer(): Promise<lightInfo> {
+	let url = this.baseurl + "/info";
+	
+	const response = await fetch(url);
+	return response.json() as Promise<lightInfo>;
+    }
+
+    getAutoMode() {
+	this.platform.log('Triggering getAutoMode:');
+	return this.accessoryState.auto;
+    }
+    
+    async setAutoMode(value: CharacteristicValue) {
+	let on = value as boolean;	
+	let url = this.baseurl + "/auto";
+	this.platform.log('Triggering setAutoMode: ' + on);
+
+	// XXX: Only allowed to return to auto mode after on/off.
+	if (! on) {
+	    return this.accessoryState.auto;
+	}
+	await fetch(url)
+	    .then((response) => {
+		this.platform.log('setAutoMode returns : ' + response.ok);
+		if (response.ok) {
+		    this.accessoryState.auto = true;
+		    this.accessoryState.mode = "auto";
+		}
+		// push the new value to HomeKit
+		this.autoService.updateCharacteristic(
+		    this.platform.Characteristic.On, this.accessoryState.auto);
+	    })
+	    .catch((error) => {
+		this.platform.log('setAutoMode Error : ' + error.message);
+	    });
     }
 }

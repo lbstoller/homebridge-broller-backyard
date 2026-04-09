@@ -1,27 +1,18 @@
 {
-    "bridge": {
-        "name": "Homebridge",
-        "username": "CD:22:3D:E3:CE:30",
-        "pin": "031-45-156"
-    },
-    "name": "BrollerTemperature",
-    "platform": "BrollerHomebridgeTemperature",
+    "name": "BrollerBackyard",
+    "platform": "BrollerHomebridgeBackyard",
     "accessories": [
         {
-            "accessory": "BrollerTemperature",
-	    "ID": "1E755DDB9D7F",
-            "name": "Freezer",
-            "url": "http://192.168.4.187",
-            "field_name": "temperature",
-            "units": "F"
+            "accessory": "BrollerBackyard",
+	    "ID": "A1755AAB9D7F",
+            "name": "North Lights",
+            "url": "http://192.168.4.176/lights",
         },
         {
-            "accessory": "BrollerTemperature",
-	    "ID": "E1755DDB9D7F",
-            "name": "Soil",
-            "url": "http://192.168.4.176/soil",
-            "field_name": "temperature",
-            "units": "F"
+            "accessory": "BrollerBackyard",
+	    "ID": "A1755AA9BD7F",
+            "name": "South Lights",
+            "url": "http://192.168.4.177/lights",
         }
     ]
 }

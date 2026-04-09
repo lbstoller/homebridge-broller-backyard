@@ -1,19 +1,19 @@
 {
-  "name": "homebridge-broller-temperature",
-  "displayName": "Broller Temperature",
+  "name": "homebridge-broller-backyard",
+  "displayName": "Broller Backyard Lights",
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "Arduino based HTTP temperature sensors",
+  "description": "Arduino based HTTP backyard lights",
   "author": "Leigh Stoller",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/lbstoller/homebridge-broller-temperature#readme",
+  "homepage": "https://github.com/lbstoller/homebridge-broller-backyard#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lbstoller/homebridge-broller-temperature.git"
+    "url": "https://github.com/lbstoller/homebridge-broller-backyard.git"
   },
   "bugs": {
-    "url": "https://github.com/lbstoller/homebridge-broller-temperature/issues"
+    "url": "https://github.com/lbstoller/homebridge-broller-backyard/issues"
   },
   "keywords": [
     "homebridge-plugin"

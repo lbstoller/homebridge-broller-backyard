@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "BrollerHomebridgeTemperature",
+  "pluginAlias": "BrollerHomebridgeBackyard",
   "pluginType": "platform",
   "singular": true,
   "strictValidation": false,
@@ -11,7 +11,7 @@
       "name": {
         "title": "Name",
         "type": "string",
-        "default": "Broller Temperature Platform"
+        "default": "Broller Backyard Platform"
       }
     }
   }
