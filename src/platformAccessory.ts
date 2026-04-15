@@ -86,13 +86,19 @@ export class BrollerBackyardAccessory {
 	    this.updateOnOff()
 		.then(() => {
 		    this.platform.log.debug('update OnOff done');
-		    // push the new value and status to HomeKit
-		    this.service.updateCharacteristic(
-			this.platform.Characteristic.On, this.accessoryState.on);
+		    this.updateHomeKit();
 		});
 	}, 10000);
 	
 	this.platform.log.debug('Finished setting up Broller backyard accessory');
+    }
+
+    // Update Homekit from current accessory values
+    updateHomeKit() {
+	this.service.updateCharacteristic(
+	    this.platform.Characteristic.On, this.accessoryState.on);
+	this.autoService.updateCharacteristic(
+	    this.platform.Characteristic.On, this.accessoryState.auto);
     }
 
     /*
@@ -132,13 +138,17 @@ export class BrollerBackyardAccessory {
 		if (response.ok) {
 		    if (on) {
 			this.accessoryState.on = true;
+			this.accessoryState.mode = "on";
 		    }
 		    else {
 			this.accessoryState.on = false;
+			this.accessoryState.mode = "off";
 		    }
-		    // push the new value to HomeKit
-		    this.service.updateCharacteristic(
-			this.platform.Characteristic.On, this.accessoryState.on);
+		    // Setting on/off turns off auto mode.
+		    this.accessoryState.auto = false;
+		    
+		    // push the new values to HomeKit
+		    this.updateHomeKit();
 		}
 	    })
 	    .catch((error) => {
@@ -200,9 +210,8 @@ export class BrollerBackyardAccessory {
 		    this.accessoryState.auto = true;
 		    this.accessoryState.mode = "auto";
 		}
-		// push the new value to HomeKit
-		this.autoService.updateCharacteristic(
-		    this.platform.Characteristic.On, this.accessoryState.auto);
+		// push the new values to HomeKit
+		this.updateHomeKit();
 	    })
 	    .catch((error) => {
 		this.platform.log('setAutoMode Error : ' + error.message);
